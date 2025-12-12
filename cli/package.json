@@ -1,0 +1,34 @@
+{
+    "name": "@ai-tester/cli",
+    "version": "1.0.0",
+    "description": "CLI tool for AI Testing Agent - integrates with any code editor",
+    "main": "dist/index.js",
+    "bin": {
+        "ai-tester": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "ts-node src/index.ts",
+        "start": "node dist/index.js"
+    },
+    "keywords": [
+        "ai",
+        "testing",
+        "playwright",
+        "cli"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "commander": "^11.0.0",
+        "conf": "^11.0.0",
+        "node-fetch": "^2.7.0",
+        "ora": "^5.4.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/node-fetch": "^2.6.0",
+        "typescript": "^5.0.0"
+    }
+}

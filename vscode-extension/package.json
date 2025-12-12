@@ -1,0 +1,88 @@
+{
+    "name": "ai-test-agent",
+    "displayName": "AI Test Agent",
+    "description": "AI-powered code analysis and test generation for your projects",
+    "version": "0.0.1",
+    "publisher": "ai-tester",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Testing",
+        "Other"
+    ],
+    "activationEvents": [],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "ai-test-agent.analyze",
+                "title": "AI Test Agent: Analyze File"
+            },
+            {
+                "command": "ai-test-agent.generateTests",
+                "title": "AI Test Agent: Generate Tests"
+            },
+            {
+                "command": "ai-test-agent.setApiKey",
+                "title": "AI Test Agent: Set API Key"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "ai-test-agent.analyze",
+                    "group": "ai-test-agent@1",
+                    "when": "editorTextFocus"
+                },
+                {
+                    "command": "ai-test-agent.generateTests",
+                    "group": "ai-test-agent@2",
+                    "when": "editorTextFocus"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "ai-test-agent.analyze",
+                    "group": "ai-test-agent@1",
+                    "when": "resourceExtname =~ /\\.(tsx?|jsx?)$/"
+                },
+                {
+                    "command": "ai-test-agent.generateTests",
+                    "group": "ai-test-agent@2",
+                    "when": "resourceExtname =~ /\\.(tsx?|jsx?)$/"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "AI Test Agent",
+            "properties": {
+                "aiTestAgent.apiKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "API Key for AI Test Agent service"
+                },
+                "aiTestAgent.apiUrl": {
+                    "type": "string",
+                    "default": "http://localhost:3001",
+                    "description": "API URL for AI Test Agent service"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/node-fetch": "^2.6.13",
+        "@types/vscode": "^1.85.0",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "node-fetch": "^2.7.0"
+    }
+}

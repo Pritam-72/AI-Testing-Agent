@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  runs      TestRun[]
+}
+
+model TestRun {
+  id          String   @id @default(uuid())
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   String?
+  url         String
+  prompt      String
+  credentials Json?    // { username, password }
+  status      String   @default("QUEUED") // QUEUED, RUNNING, COMPLETED, FAILED
+  result      Json?    // Summary of results
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  logs        TestLog[]
+  artifacts   TestArtifact[]
+}
+
+model TestLog {
+  id        String   @id @default(uuid())
+  run       TestRun  @relation(fields: [runId], references: [id])
+  runId     String
+  content   String
+  level     String   @default("INFO")
+  createdAt DateTime @default(now())
+}
+
+model TestArtifact {
+  id        String   @id @default(uuid())
+  run       TestRun  @relation(fields: [runId], references: [id])
+  runId     String
+  type      String   // SCREENSHOT, VIDEO, PLAYWRIGHT_TRACE, CODE
+  path      String   // MinIO path/URL
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  key       String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  lastUsed  DateTime?
+  isActive  Boolean   @default(true)
+}
