@@ -1,71 +1,44 @@
 {
-    "name": "ai-test-agent",
-    "displayName": "AI Test Agent",
-    "description": "AI-powered code analysis and test generation for your projects",
+    "name": "ai-testing-agent-vscode",
+    "displayName": "AI Testing Agent",
+    "description": "Integrates with AI Testing Agent API to automatically test webpages and fix issues",
     "version": "0.0.1",
-    "publisher": "ai-tester",
+    "publisher": "ai-testing-agent",
     "engines": {
         "vscode": "^1.85.0"
     },
     "categories": [
         "Testing",
-        "Other"
+        "Machine Learning"
     ],
-    "activationEvents": [],
+    "activationEvents": [
+        "onCommand:ai-testing-agent.testPage",
+        "onCommand:ai-testing-agent.fixIssue"
+    ],
     "main": "./dist/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "ai-test-agent.analyze",
-                "title": "AI Test Agent: Analyze File"
+                "command": "ai-testing-agent.testPage",
+                "title": "AI Testing Agent: Test Webpage"
             },
             {
-                "command": "ai-test-agent.generateTests",
-                "title": "AI Test Agent: Generate Tests"
-            },
-            {
-                "command": "ai-test-agent.setApiKey",
-                "title": "AI Test Agent: Set API Key"
+                "command": "ai-testing-agent.fixIssue",
+                "title": "AI Testing Agent: Fix Issue"
             }
         ],
-        "menus": {
-            "editor/context": [
-                {
-                    "command": "ai-test-agent.analyze",
-                    "group": "ai-test-agent@1",
-                    "when": "editorTextFocus"
-                },
-                {
-                    "command": "ai-test-agent.generateTests",
-                    "group": "ai-test-agent@2",
-                    "when": "editorTextFocus"
-                }
-            ],
-            "explorer/context": [
-                {
-                    "command": "ai-test-agent.analyze",
-                    "group": "ai-test-agent@1",
-                    "when": "resourceExtname =~ /\\.(tsx?|jsx?)$/"
-                },
-                {
-                    "command": "ai-test-agent.generateTests",
-                    "group": "ai-test-agent@2",
-                    "when": "resourceExtname =~ /\\.(tsx?|jsx?)$/"
-                }
-            ]
-        },
         "configuration": {
-            "title": "AI Test Agent",
+            "title": "AI Testing Agent",
             "properties": {
-                "aiTestAgent.apiKey": {
+                "aiTestingAgent.apiUrl": {
+                    "type": "string",
+                    "default": "http://localhost:3002",
+                    "description": "URL of the IDE Testing API"
+                },
+                "aiTestingAgent.apiKey": {
                     "type": "string",
                     "default": "",
-                    "description": "API Key for AI Test Agent service"
-                },
-                "aiTestAgent.apiUrl": {
-                    "type": "string",
-                    "default": "http://localhost:3001",
-                    "description": "API URL for AI Test Agent service"
+                    "description": "API Key for authentication"
                 }
             }
         }
@@ -78,11 +51,11 @@
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
-        "@types/node-fetch": "^2.6.13",
         "@types/vscode": "^1.85.0",
-        "typescript": "^5.0.0"
+        "typescript": "^5.3.3",
+        "@vscode/test-electron": "^2.3.8"
     },
     "dependencies": {
-        "node-fetch": "^2.7.0"
+        "axios": "^1.6.2"
     }
 }

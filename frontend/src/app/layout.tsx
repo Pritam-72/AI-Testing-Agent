@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Test Agent",
-  description: "AI-Powered Software Testing Platform",
+  title: "AI Test Agent | AI-Powered Testing Automation",
+  description: "Automate your end-to-end testing with AI. Write tests in plain English, get results in seconds. Powered by Playwright and LLMs.",
 };
 
 export default function RootLayout({
