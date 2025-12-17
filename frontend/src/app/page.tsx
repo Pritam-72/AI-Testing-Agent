@@ -1,8 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Dynamically import Three.js background to avoid SSR issues
+const ThreeBackground = dynamic(() => import('./components/ThreeBackground'), {
+    ssr: false,
+    loading: () => null
+});
 
 // Types
 interface TestRun {
@@ -18,7 +25,88 @@ interface ApiKey {
     key: string;
 }
 
-// Status Badge Component with animation
+// Animated Icon Components
+function RocketIcon() {
+    return (
+        <motion.svg
+            className="w-8 h-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            animate={{ y: [0, -3, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            suppressHydrationWarning
+        >
+            <path d="M12 2L8 8H16L12 2Z" fill="url(#grad1)" />
+            <path d="M8 8L6 18H18L16 8H8Z" fill="url(#grad2)" />
+            <circle cx="12" cy="13" r="2" fill="#030305" />
+            <path d="M6 18L4 22H8L6 18Z" fill="#22c55e" />
+            <path d="M18 18L20 22H16L18 18Z" fill="#22c55e" />
+            <defs suppressHydrationWarning>
+                <linearGradient id="grad1" x1="8" y1="2" x2="16" y2="8" suppressHydrationWarning>
+                    <stop stopColor="#22c55e" suppressHydrationWarning />
+                    <stop offset="1" stopColor="#3b82f6" suppressHydrationWarning />
+                </linearGradient>
+                <linearGradient id="grad2" x1="6" y1="8" x2="18" y2="18" suppressHydrationWarning>
+                    <stop stopColor="#3b82f6" suppressHydrationWarning />
+                    <stop offset="1" stopColor="#a855f7" suppressHydrationWarning />
+                </linearGradient>
+            </defs>
+        </motion.svg>
+    );
+}
+
+function BrainIcon() {
+    return (
+        <motion.svg
+            className="w-8 h-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            suppressHydrationWarning
+        >
+            <path d="M12 4C8 4 5 7 5 11C5 15 8 18 12 18C16 18 19 15 19 11C19 7 16 4 12 4Z" stroke="url(#brainGrad)" strokeWidth="2" fill="none" />
+            <path d="M9 8C9 8 10 10 12 10C14 10 15 8 15 8" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M9 14C9 14 10 12 12 12C14 12 15 14 15 14" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="12" y1="18" x2="12" y2="22" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" />
+            <defs suppressHydrationWarning>
+                <linearGradient id="brainGrad" x1="5" y1="4" x2="19" y2="18" suppressHydrationWarning>
+                    <stop stopColor="#22c55e" suppressHydrationWarning />
+                    <stop offset="0.5" stopColor="#3b82f6" suppressHydrationWarning />
+                    <stop offset="1" stopColor="#a855f7" suppressHydrationWarning />
+                </linearGradient>
+            </defs>
+        </motion.svg>
+    );
+}
+
+function ChartIcon() {
+    return (
+        <motion.svg
+            className="w-8 h-8"
+            viewBox="0 0 24 24"
+            fill="none"
+        >
+            <motion.rect
+                x="4" y="14" width="4" height="6" rx="1" fill="#22c55e"
+                animate={{ height: [6, 8, 6] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <motion.rect
+                x="10" y="10" width="4" height="10" rx="1" fill="#3b82f6"
+                animate={{ height: [10, 12, 10] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+            />
+            <motion.rect
+                x="16" y="6" width="4" height="14" rx="1" fill="#a855f7"
+                animate={{ height: [14, 16, 14] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
+            />
+        </motion.svg>
+    );
+}
+
+// Status Badge Component
 function StatusBadge({ status }: { status: string }) {
     const statusConfig: Record<string, { class: string; icon: string }> = {
         COMPLETED: { class: 'status-completed', icon: '✓' },
@@ -47,24 +135,72 @@ function TestRunCard({ run, index }: { run: TestRun; index: number }) {
     return (
         <motion.div
             className="run-card flex justify-between items-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: index * 0.08, type: 'spring', stiffness: 200 }}
+            whileHover={{ scale: 1.02, x: 4 }}
         >
             <div className="flex-1 min-w-0">
-                <div className="text-[var(--foreground)] font-medium truncate">{run.url}</div>
+                <div className="text-[var(--foreground)] font-semibold truncate">{run.url}</div>
                 <div className="text-[var(--foreground-muted)] text-sm truncate mt-1">{run.prompt}</div>
             </div>
             <div className="flex items-center gap-4 ml-4">
                 <StatusBadge status={run.status} />
                 <Link
                     href={`/runs/${run.id}`}
-                    className="text-[var(--accent-blue)] hover:text-[var(--accent-green)] text-sm font-medium transition-colors"
+                    className="text-[var(--accent-green)] hover:text-[var(--accent-blue)] text-sm font-semibold transition-all hover:translate-x-1"
                 >
                     View →
                 </Link>
             </div>
+        </motion.div>
+    );
+}
+
+// Step Card Component
+function StepCard({ number, title, description, icon, delay }: {
+    number: number;
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    delay: number;
+}) {
+    return (
+        <motion.div
+            className="step-card"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay, duration: 0.6, type: 'spring' }}
+            whileHover={{ scale: 1.03 }}
+        >
+            <div className="step-number">{number}</div>
+            <div className="mb-4">{icon}</div>
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">{title}</h3>
+            <p className="text-[var(--foreground-muted)] text-sm leading-relaxed">{description}</p>
+        </motion.div>
+    );
+}
+
+// Feature Card Component
+function FeatureCard({ icon, title, description, delay }: {
+    icon: string;
+    title: string;
+    description: string;
+    delay: number;
+}) {
+    return (
+        <motion.div
+            className="feature-card"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay, duration: 0.5 }}
+            whileHover={{ y: -6 }}
+        >
+            <div className="text-4xl mb-4">{icon}</div>
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">{title}</h3>
+            <p className="text-[var(--foreground-muted)] text-sm leading-relaxed">{description}</p>
         </motion.div>
     );
 }
@@ -78,8 +214,10 @@ export default function Home() {
     const [newKeyName, setNewKeyName] = useState('');
     const [newKey, setNewKey] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'runs' | 'keys'>('runs');
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         fetchRuns();
         fetchApiKeys();
     }, []);
@@ -123,23 +261,16 @@ export default function Home() {
                 setUrl('');
                 setPrompt('');
 
-                // Subscribe to real-time updates for this run
                 const eventSource = new EventSource(
                     `http://localhost:3001/api/runs/${newRun.id}/stream`
                 );
 
-                eventSource.addEventListener('update', () => {
-                    fetchRuns();
-                });
-
+                eventSource.addEventListener('update', () => fetchRuns());
                 eventSource.addEventListener('complete', () => {
                     fetchRuns();
                     eventSource.close();
                 });
-
-                eventSource.addEventListener('error', () => {
-                    eventSource.close();
-                });
+                eventSource.addEventListener('error', () => eventSource.close());
             }
         } catch (err) {
             console.error(err);
@@ -177,221 +308,343 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen p-8" style={{ background: 'var(--background)' }}>
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <motion.div
-                    className="mb-8"
-                    initial={{ opacity: 0, y: -20 }}
+        <div className="min-h-screen relative">
+            {/* CSS Animated Background Fallback (always visible, works everywhere) */}
+            <div className="animated-bg-fallback" />
+            <div className="css-particles">
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+                <div className="css-particle" />
+            </div>
+
+            {/* Three.js Background (enhanced, on top of CSS fallback) */}
+            {mounted && (
+                <Suspense fallback={null}>
+                    <ThreeBackground />
+                </Suspense>
+            )}
+
+            {/* Gradient Overlay */}
+            <div className="hero-gradient fixed inset-0 pointer-events-none" />
+
+            {/* Content */}
+            <div className="relative z-10 px-6 py-12 max-w-6xl mx-auto">
+                {/* Hero Section */}
+                <motion.section
+                    className="text-center mb-20 pt-8"
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
                 >
-                    <h1 className="text-4xl font-bold gradient-text mb-2">AI Test Agent</h1>
-                    <p className="text-[var(--foreground-secondary)]">
-                        AI-powered end-to-end testing automation
+                    <motion.div
+                        className="inline-block mb-6"
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                    >
+                        <span className="text-6xl">🧪</span>
+                    </motion.div>
+                    <h1 className="text-5xl md:text-7xl font-black mb-6 gradient-text">
+                        AI Test Agent
+                    </h1>
+                    <p className="text-xl md:text-2xl text-[var(--foreground-secondary)] max-w-2xl mx-auto mb-8">
+                        Automate your end-to-end testing with the power of AI.
+                        Write tests in plain English, get results in seconds.
                     </p>
-                </motion.div>
+                    <motion.a
+                        href="#get-started"
+                        className="btn-primary inline-block text-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        Get Started →
+                    </motion.a>
+                </motion.section>
 
-                {/* Tab Navigation */}
-                <motion.div
-                    className="flex gap-2 mb-6"
+                {/* How It Works Section */}
+                <motion.section
+                    className="mb-20"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
                 >
-                    {['runs', 'keys'].map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab as 'runs' | 'keys')}
-                            className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeTab === tab
-                                ? 'bg-[var(--accent-green)] text-white'
-                                : 'bg-[var(--background-card)] text-[var(--foreground-secondary)] hover:bg-[var(--background-elevated)]'
-                                }`}
-                        >
-                            {tab === 'runs' ? '🧪 Test Runs' : '🔑 API Keys'}
-                        </button>
-                    ))}
-                </motion.div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[var(--foreground)]">
+                        How It Works
+                    </h2>
+                    <p className="text-center text-[var(--foreground-muted)] mb-12 max-w-xl mx-auto">
+                        Three simple steps to automate your testing workflow
+                    </p>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <StepCard
+                            number={1}
+                            title="Enter Your URL"
+                            description="Provide the URL of the web application you want to test. Our AI will analyze and understand the page structure."
+                            icon={<RocketIcon />}
+                            delay={0.1}
+                        />
+                        <StepCard
+                            number={2}
+                            title="Describe Your Test"
+                            description="Write what you want to test in plain English. No coding required - just describe the user journey."
+                            icon={<BrainIcon />}
+                            delay={0.2}
+                        />
+                        <StepCard
+                            number={3}
+                            title="Get Results"
+                            description="AI generates and runs Playwright tests automatically. View detailed results with screenshots and videos."
+                            icon={<ChartIcon />}
+                            delay={0.3}
+                        />
+                    </div>
+                </motion.section>
 
-                <AnimatePresence mode="wait">
-                    {activeTab === 'runs' && (
-                        <motion.div
-                            key="runs"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                        >
-                            {/* New Test Run Form */}
-                            <div className="glass-card p-6 mb-6">
-                                <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-                                    ✨ New Test Run
-                                </h2>
-                                <form onSubmit={startRun} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
-                                            Target URL
-                                        </label>
-                                        <input
-                                            type="url"
-                                            required
-                                            className="input-field"
-                                            placeholder="https://example.com"
-                                            value={url}
-                                            onChange={e => setUrl(e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
-                                            Test Instructions
-                                        </label>
-                                        <textarea
-                                            className="input-field min-h-[100px] resize-none"
-                                            placeholder="E.g., Log in and verify the dashboard loads..."
-                                            value={prompt}
-                                            onChange={e => setPrompt(e.target.value)}
-                                        />
-                                    </div>
-                                    <motion.button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="btn-primary w-full"
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {loading ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                                <motion.span
-                                                    animate={{ rotate: 360 }}
-                                                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                                                >
-                                                    ◌
-                                                </motion.span>
-                                                Running...
-                                            </span>
-                                        ) : (
-                                            '🚀 Start Test Run'
-                                        )}
-                                    </motion.button>
-                                </form>
-                            </div>
+                {/* Features Section */}
+                <motion.section
+                    className="mb-20"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                >
+                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[var(--foreground)]">
+                        Powerful Features
+                    </h2>
+                    <p className="text-center text-[var(--foreground-muted)] mb-12 max-w-xl mx-auto">
+                        Everything you need for modern, AI-powered testing
+                    </p>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <FeatureCard
+                            icon="🤖"
+                            title="AI-Powered"
+                            description="Advanced LLM understands your test descriptions and generates robust Playwright test code."
+                            delay={0.1}
+                        />
+                        <FeatureCard
+                            icon="⚡"
+                            title="Real-Time Results"
+                            description="Watch your tests run live with real-time status updates and instant feedback."
+                            delay={0.2}
+                        />
+                        <FeatureCard
+                            icon="🔌"
+                            title="API Integration"
+                            description="Integrate with your CI/CD pipeline, IDE, or any tool using our REST API."
+                            delay={0.3}
+                        />
+                    </div>
+                </motion.section>
 
-                            {/* Recent Runs */}
-                            <div className="glass-card p-6">
-                                <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-                                    📋 Recent Runs
-                                </h2>
-                                <div className="space-y-3">
-                                    <AnimatePresence>
-                                        {runs.map((run, index) => (
-                                            <TestRunCard key={run.id} run={run} index={index} />
-                                        ))}
-                                    </AnimatePresence>
-                                    {runs.length === 0 && (
-                                        <motion.div
-                                            className="text-[var(--foreground-muted)] text-center py-8"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                        >
-                                            No test runs yet. Create your first test above! ☝️
-                                        </motion.div>
-                                    )}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {activeTab === 'keys' && (
-                        <motion.div
-                            key="keys"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                        >
-                            {/* Generate API Key */}
-                            <div className="glass-card p-6 mb-6">
-                                <h2 className="text-xl font-semibold mb-2 text-[var(--foreground)]">
-                                    🔑 Generate API Key
-                                </h2>
-                                <p className="text-[var(--foreground-muted)] mb-4 text-sm">
-                                    Use API keys to integrate with your code editor (VS Code, Cursor, etc.)
-                                </p>
-                                <form onSubmit={createApiKey} className="flex gap-3">
-                                    <input
-                                        type="text"
-                                        className="input-field flex-1"
-                                        placeholder="Key name (e.g., 'VS Code')"
-                                        value={newKeyName}
-                                        onChange={e => setNewKeyName(e.target.value)}
-                                    />
-                                    <motion.button
-                                        type="submit"
-                                        className="btn-primary whitespace-nowrap"
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        Generate
-                                    </motion.button>
-                                </form>
-
-                                {newKey && (
-                                    <motion.div
-                                        className="mt-4 p-4 rounded-xl bg-[var(--accent-green-glow)] border border-[var(--accent-green)]"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                    >
-                                        <p className="text-sm text-[var(--accent-green)] font-medium mb-2">
-                                            🔐 Your new API key (copy it now, it won&apos;t be shown again):
-                                        </p>
-                                        <code className="block p-3 bg-[var(--background)] rounded-lg text-sm break-all font-mono text-[var(--foreground)]">
-                                            {newKey}
-                                        </code>
-                                    </motion.div>
-                                )}
-                            </div>
-
-                            {/* API Keys List */}
-                            <div className="glass-card p-6">
-                                <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-                                    📋 Your API Keys
-                                </h2>
-                                <div className="space-y-3">
-                                    {apiKeys.map((key, index) => (
-                                        <motion.div
-                                            key={key.id}
-                                            className="run-card flex justify-between items-center"
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                        >
-                                            <div>
-                                                <div className="text-[var(--foreground)] font-medium">{key.name}</div>
-                                                <code className="text-sm text-[var(--foreground-muted)] font-mono">{key.key}</code>
-                                            </div>
-                                            <button
-                                                onClick={() => revokeApiKey(key.id)}
-                                                className="text-[var(--accent-red)] hover:bg-[var(--accent-red-glow)] px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            >
-                                                Revoke
-                                            </button>
-                                        </motion.div>
-                                    ))}
-                                    {apiKeys.length === 0 && (
-                                        <div className="text-[var(--foreground-muted)] text-center py-8">
-                                            No API keys yet. Generate one above!
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* CLI Usage Guide */}
-                            <motion.div
-                                className="glass-card p-6 mt-6"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
+                {/* Main App Section */}
+                <section id="get-started" className="scroll-mt-8">
+                    {/* Tab Navigation */}
+                    <motion.div
+                        className="flex gap-3 mb-6 justify-center"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        {['runs', 'keys'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as 'runs' | 'keys')}
+                                className={`tab-button ${activeTab === tab ? 'active' : ''}`}
                             >
-                                <h3 className="text-lg font-semibold text-[var(--accent-blue)] mb-3">
-                                    💻 CLI Usage
-                                </h3>
-                                <pre className="bg-[var(--background)] p-4 rounded-xl text-sm overflow-x-auto text-[var(--foreground-secondary)]">
-                                    {`# Install CLI globally
+                                {tab === 'runs' ? '🧪 Test Runs' : '🔑 API Keys'}
+                            </button>
+                        ))}
+                    </motion.div>
+
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'runs' && (
+                            <motion.div
+                                key="runs"
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 30 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* New Test Run Form */}
+                                <div className="glass-card neon-border p-8 mb-8">
+                                    <h2 className="text-2xl font-bold mb-6 text-[var(--foreground)] flex items-center gap-3">
+                                        <span className="text-3xl">✨</span> New Test Run
+                                    </h2>
+                                    <form onSubmit={startRun} className="space-y-5">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[var(--foreground-secondary)] mb-2">
+                                                Target URL
+                                            </label>
+                                            <input
+                                                type="url"
+                                                required
+                                                className="input-field"
+                                                placeholder="https://example.com"
+                                                value={url}
+                                                onChange={e => setUrl(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[var(--foreground-secondary)] mb-2">
+                                                Test Instructions
+                                            </label>
+                                            <textarea
+                                                className="input-field min-h-[120px] resize-none"
+                                                placeholder="E.g., Navigate to the login page, enter test credentials, verify the dashboard loads correctly..."
+                                                value={prompt}
+                                                onChange={e => setPrompt(e.target.value)}
+                                            />
+                                        </div>
+                                        <motion.button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="btn-primary w-full text-lg"
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            {loading ? (
+                                                <span className="flex items-center justify-center gap-3">
+                                                    <motion.span
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                                    >
+                                                        ⚙️
+                                                    </motion.span>
+                                                    Running Test...
+                                                </span>
+                                            ) : (
+                                                '🚀 Start Test Run'
+                                            )}
+                                        </motion.button>
+                                    </form>
+                                </div>
+
+                                {/* Recent Runs */}
+                                <div className="glass-card p-8">
+                                    <h2 className="text-2xl font-bold mb-6 text-[var(--foreground)] flex items-center gap-3">
+                                        <span className="text-3xl">📋</span> Recent Runs
+                                    </h2>
+                                    <div className="space-y-4">
+                                        <AnimatePresence>
+                                            {runs.map((run, index) => (
+                                                <TestRunCard key={run.id} run={run} index={index} />
+                                            ))}
+                                        </AnimatePresence>
+                                        {runs.length === 0 && (
+                                            <motion.div
+                                                className="text-[var(--foreground-muted)] text-center py-12"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                            >
+                                                <div className="text-5xl mb-4">🔍</div>
+                                                <p>No test runs yet. Create your first test above!</p>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'keys' && (
+                            <motion.div
+                                key="keys"
+                                initial={{ opacity: 0, x: 30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -30 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* Generate API Key */}
+                                <div className="glass-card neon-border p-8 mb-8">
+                                    <h2 className="text-2xl font-bold mb-2 text-[var(--foreground)] flex items-center gap-3">
+                                        <span className="text-3xl">🔑</span> Generate API Key
+                                    </h2>
+                                    <p className="text-[var(--foreground-muted)] mb-6 text-sm">
+                                        Use API keys to integrate with VS Code, Cursor, or your CI/CD pipeline
+                                    </p>
+                                    <form onSubmit={createApiKey} className="flex gap-4">
+                                        <input
+                                            type="text"
+                                            className="input-field flex-1"
+                                            placeholder="Key name (e.g., 'VS Code')"
+                                            value={newKeyName}
+                                            onChange={e => setNewKeyName(e.target.value)}
+                                        />
+                                        <motion.button
+                                            type="submit"
+                                            className="btn-primary whitespace-nowrap"
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            Generate
+                                        </motion.button>
+                                    </form>
+
+                                    {newKey && (
+                                        <motion.div
+                                            className="mt-6 p-5 rounded-xl bg-[rgba(34,197,94,0.1)] border border-[var(--accent-green)]"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                        >
+                                            <p className="text-sm text-[var(--accent-green)] font-semibold mb-3">
+                                                🔐 Your new API key (copy it now, won&apos;t be shown again):
+                                            </p>
+                                            <code className="block p-4 bg-[var(--background)] rounded-lg text-sm break-all font-mono text-[var(--foreground)]">
+                                                {newKey}
+                                            </code>
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                {/* API Keys List */}
+                                <div className="glass-card p-8 mb-8">
+                                    <h2 className="text-2xl font-bold mb-6 text-[var(--foreground)] flex items-center gap-3">
+                                        <span className="text-3xl">📋</span> Your API Keys
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {apiKeys.map((key, index) => (
+                                            <motion.div
+                                                key={key.id}
+                                                className="run-card flex justify-between items-center"
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                            >
+                                                <div>
+                                                    <div className="text-[var(--foreground)] font-semibold">{key.name}</div>
+                                                    <code className="text-sm text-[var(--foreground-muted)] font-mono">{key.key}</code>
+                                                </div>
+                                                <button
+                                                    onClick={() => revokeApiKey(key.id)}
+                                                    className="text-[var(--accent-red)] hover:bg-[var(--accent-red-glow)] px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                                                >
+                                                    Revoke
+                                                </button>
+                                            </motion.div>
+                                        ))}
+                                        {apiKeys.length === 0 && (
+                                            <div className="text-[var(--foreground-muted)] text-center py-12">
+                                                <div className="text-5xl mb-4">🔐</div>
+                                                <p>No API keys yet. Generate one above!</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CLI Usage Guide */}
+                                <motion.div
+                                    className="glass-card p-8"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <h3 className="text-xl font-bold text-[var(--accent-blue)] mb-4 flex items-center gap-3">
+                                        <span className="text-2xl">💻</span> CLI Usage
+                                    </h3>
+                                    <pre className="bg-[var(--background)] p-6 rounded-xl text-sm overflow-x-auto text-[var(--foreground-secondary)] leading-relaxed">
+                                        {`# Install CLI globally
 npm install -g @ai-tester/cli
 
 # Configure your API key
@@ -402,11 +655,22 @@ ai-tester analyze ./src/components/Button.tsx
 
 # Generate tests for a file
 ai-tester test ./src/components/Button.tsx --watch`}
-                                </pre>
+                                    </pre>
+                                </motion.div>
                             </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
+                    </AnimatePresence>
+                </section>
+
+                {/* Footer */}
+                <motion.footer
+                    className="text-center mt-20 py-8 text-[var(--foreground-muted)] text-sm"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    <p>Built with ❤️ using Next.js, Three.js, and AI</p>
+                </motion.footer>
             </div>
         </div>
     );

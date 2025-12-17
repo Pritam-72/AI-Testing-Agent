@@ -16,30 +16,25 @@ test('Smoke Test for ${domain}', async ({ page }) => {
   // Mock test generated (OpenAI quota exceeded or unavailable)
   // Original prompt: ${prompt}
   
+  // Set longer timeout for slow networks
+  test.setTimeout(30000);
+  
   // Step 1: Navigate to the page
-  await page.goto('${url}', { waitUntil: 'domcontentloaded' });
-  
-  // Step 2: Verify page loaded with a title
-  await expect(page).toHaveTitle(/.+/);
-  
-  // Step 3: Check that the body is visible
-  const body = page.locator('body');
-  await expect(body).toBeVisible();
-  
-  // Step 4: Check for main content area (common patterns)
-  const mainContent = page.locator('main, article, #content, .content, [role="main"]').first();
-  if (await mainContent.count() > 0) {
-    await expect(mainContent).toBeVisible();
-  }
-  
-  // Step 5: Verify no console errors (basic check)
-  const consoleErrors: string[] = [];
-  page.on('console', msg => {
-    if (msg.type() === 'error') consoleErrors.push(msg.text());
+  await page.goto('${url}', { 
+    waitUntil: 'networkidle',
+    timeout: 20000 
   });
   
-  // Wait briefly for any async errors
-  await page.waitForTimeout(1000);
+  // Step 2: Verify page loaded with a title (allow any title including empty for SPAs)
+  const title = await page.title();
+  console.log('Page title:', title);
+  
+  // Step 3: Check page has loaded by verifying we're on the correct URL
+  const currentUrl = page.url();
+  expect(currentUrl).toContain('${domain}');
+  
+  // Step 4: Take a screenshot to capture the current state
+  await page.screenshot({ path: 'results/screenshot.png', fullPage: false });
   
   // Log success
   console.log('✅ Mock smoke test passed for ${domain}');

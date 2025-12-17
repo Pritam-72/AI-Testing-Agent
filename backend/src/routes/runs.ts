@@ -68,6 +68,9 @@ export default async function runRoutes(fastify: FastifyInstance) {
             return reply.code(404).send({ error: 'Run not found' });
         }
 
+        // Hijack the response to prevent Fastify from sending automatic response
+        reply.hijack();
+
         // Set SSE headers
         reply.raw.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -79,8 +82,24 @@ export default async function runRoutes(fastify: FastifyInstance) {
         let lastStatus: string | null = null;
         let pollCount = 0;
         const maxPolls = 300; // 5 minutes max (300 * 1 second)
+        let isClosed = false;
+        let interval: ReturnType<typeof setInterval>;
+
+        const cleanup = () => {
+            if (!isClosed) {
+                isClosed = true;
+                if (interval) clearInterval(interval);
+                try {
+                    reply.raw.end();
+                } catch (e) {
+                    // Ignore errors when ending response
+                }
+            }
+        };
 
         const sendUpdate = async () => {
+            if (isClosed) return;
+
             try {
                 const run = await prisma.testRun.findUnique({
                     where: { id },
@@ -94,8 +113,7 @@ export default async function runRoutes(fastify: FastifyInstance) {
 
                 if (!run) {
                     reply.raw.write(`event: error\ndata: ${JSON.stringify({ error: 'Run not found' })}\n\n`);
-                    clearInterval(interval);
-                    reply.raw.end();
+                    cleanup();
                     return;
                 }
 
@@ -110,25 +128,22 @@ export default async function runRoutes(fastify: FastifyInstance) {
                 // Stop polling if job is complete or max polls reached
                 if (run.status === 'COMPLETED' || run.status === 'FAILED' || pollCount >= maxPolls) {
                     reply.raw.write(`event: complete\ndata: ${JSON.stringify(run)}\n\n`);
-                    clearInterval(interval);
-                    reply.raw.end();
+                    cleanup();
                 }
             } catch (error) {
                 console.error('SSE error:', error);
-                clearInterval(interval);
-                reply.raw.end();
+                cleanup();
             }
         };
 
         // Send initial update immediately
         await sendUpdate();
 
-        // Poll every second
-        const interval = setInterval(sendUpdate, 1000);
-
-        // Cleanup on client disconnect
-        request.raw.on('close', () => {
-            clearInterval(interval);
-        });
+        // Only start polling if not already closed (job not completed/failed)
+        if (!isClosed) {
+            interval = setInterval(sendUpdate, 1000);
+            // Cleanup on client disconnect
+            request.raw.on('close', cleanup);
+        }
     });
 }
